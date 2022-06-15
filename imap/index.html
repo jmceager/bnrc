@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>High Road Map</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
+    <link href="https://fonts.googleapis.com/css?family=Raleway:200,400,600,800" rel="stylesheet">
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+<style>
+    .map-overlay {
+        position:absolute;
+        bottom: 2.5%;
+        left: 2.5%;
+        padding-left: 3%;
+        font-family: 'Raleway', sans-serif;
+        overflow: auto;
+        background: rgba(255,255,255,0.8);
+        height: 315px;
+        width: 200px;
+    }
+    #menu {
+        background: #fff;
+        position: absolute;
+        z-index: 1;
+        top: 7.5%;
+        left: 2.5%;
+        border-radius: 3px;
+        width: 120px;
+        border: 1px solid rgba(0,0,0,0.4);
+        font-family: 'Raleway', sans-serif;
+    }
+    #menu a {
+        font-size: 13px;
+        color: #404040;
+        display: block;
+        margin: 0;
+        padding: 10px;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0,0,0,0.25);
+        text-align: center;
+    }
+    #menu a:last-child {
+        border: none;
+    }
+    #menu a:hover {
+        background-color: #f8f8f8;
+        color: #404040;
+    }
+    #menu a.active {
+        background-color: #3887be;
+        color: #ffffff;
+    }
+    #menu a.active:hover {
+        background: #3074a4;
+    }
+    .mapboxgl-popup {
+        max-width: 400px;
+        font-family: 'Raleway',sans-serif;
+    }
+    legend{
+        background-color: #fff;
+        border-radius: 3px;
+        bottom: 30px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+        font: 12px/20px 'Raleway', sans-serif;
+        padding: 5px;
+        position: absolute;
+        right: 10px;
+        z-index: 1;
+    }
+    .legend div span {
+        border-radius: 50%;
+        display: inline-block;
+        height: 10px;
+        margin-left: 5px;
+        width: 10px;
+    }
+    .toggle {
+        position:absolute;
+        font-family: 'Raleway','sans-serif';
+        top:0%;
+        right:0%;
+    }
+    h2 {
+        font-family: 'Raleway', sans-serif;
+        font-style: 'extra-bold';
+        font-size: 24px;
+    }
+    h3 {
+        font-family: 'Raleway',sans-serif;
+        font-style: 'semi-bold';
+        font-weight: 600;
+        font-size: 14px;
+    }
+    p {
+        font-size: 14px;
+        font-family: 'Raleway', sans-serif;
+    }
+</style>
+<nav id='menu'></nav>
+<div id='map'></div>
+<div class="map-overlay" id="features">
+    <h2>The High Road</h2>
+    <div id='phase-legend' class='legend'>
+        <h4 style='font-size:16px'>Phase</h4>
+        <div><span style='background-color: #201870'></span>Current Projects</div>
+        <div><span style='background-color: #672867'></span>Next Connections</div>
+        <div><span style='background-color: #d07848'></span>Potential Connections</div>
+        <div><span style='background-color: #f8a848'></span>Wishful Thinking</div>
+        <div><span style='background-color: #000000'></span>Other Trails</div>
+    </div>
+    <div id="pd">
+        <p><em>Hover over open space!</em></p>
+    </div>
+</div>
+<!--<div id='base' class='toggle'>
+    <input id='joeberkshire/cjtsmkqyy0tnk1fp794b3svet' type='radio' name ='rtoggle' value = 'default' checked='checked'>
+    <label for='default'>default</label>
+    <input id='mapbox/streets-v11' type='radio' name='rtoggle' value='streets'>
+    <label for='streets'>streets</label>
+    <input id='mapbox/light-v10' type='radio' name='rtoggle' value='light'>
+    <label for='light'>light</label>
+    <input id='mapbox/dark-v10' type='radio' name='rtoggle' value='dark'>
+    <label for='dark'>dark</label>
+    <input id='mapbox/outdoors-v11' type='radio' name='rtoggle' value='outdoors'>
+    <label for='outdoors'>outdoors</label>
+    <input id='mapbox/satellite-v9' type='radio' name='rtoggle' value='satellite'>
+    <label for='satellite'>satellite</label> 
+</div>-->
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoiam9lYmVya3NoaXJlIiwiYSI6ImNqdHI5cDQ1NTBleGE0MHBpOGU0cWJrN24ifQ.8JjEpApr73tZ0UeS62MwIw';
+
+var bounds = [
+    [-73.680476, 42.066340],
+    [-72.839565, 42.747449]
+]    
+const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/joeberkshire/cjtsmkqyy0tnk1fp794b3svet', // '.../user/basemapid' click "share" while using studio
+    center: [-73.249608, 42.429577],
+    zoom: 8.9,
+    maxZoom: 11,
+    bounds: bounds,
+    });
+
+// following is layer loading 
+map.on('load', function () {
+    map.addSource('openspace', {
+        type: 'vector',
+        url: 'mapbox://joeberkshire.7vixamhx' //find these pieces at studio.mapbox.com/tilesets
+    });
+    map.addLayer({
+        'id': 'open space',
+        'type': 'fill',
+        'source': 'openspace',
+        'source-layer': 'os_brk_18-90omqh', 
+        'layout': {
+        'visibility': 'visible',
+        },
+        'paint': {
+            'fill-color': "hsla(108, 28%, 63%, 0.66)",
+        },
+    })
+    map.addSource('bnrc', {
+        type: 'vector',
+        url: 'mapbox://joeberkshire.56tw17tz' //find these pieces at studio.mapbox.com/tilesets
+    });
+    map.addLayer({
+        'id': 'bnrc properties',
+        'type': 'fill',
+        'source': 'bnrc',
+        'source-layer': 'bnrc-77v0yp', 
+        'layout': {
+        'visibility': 'visible',
+        },
+        'paint': {
+            'fill-color': "hsla(196, 42%, 35%, 0.8)",
+        },
+    })
+    map.addSource('trailz', {
+        type: 'vector',
+        url: 'mapbox://joeberkshire.809kjd3y' //find these pieces at studio.mapbox.com/tilesets under the name "Map ID"
+    });
+    map.addLayer({
+        'id': 'trails',
+        'type': 'line',
+        'source': 'trailz',
+        'source-layer': 'tr_062719-btk4yv', 
+        'layout': {
+        'visibility': 'visible',
+        'line-cap': 'round',
+        'line-join':'round',
+        },
+        'paint': {
+            'line-width': 4,
+            'line-dasharray': [
+                1,2
+            ],
+            'line-color': [
+              "match",
+              ["get", "hr_phase"],
+              [1],
+              "#167575",
+              [2],
+              "#5f41ab",
+              [3],
+              "#b0459a",
+              [4],
+              "#f79a60",
+              [5],
+              "hsla(0, 0%, 0%, 0)",
+              "#000000"
+            ]
+        },
+    })
+    map.addSource('roadz', {
+        type: 'vector',
+        url: 'mapbox://joeberkshire.0ltyxjlj' //find these pieces at studio.mapbox.com/tilesets
+    });
+    map.addLayer({
+        'id': 'roads',
+        'type': 'line',
+        'source': 'roadz',
+        'source-layer': 'rd-062719-biaca6', //this is the name of the tileset, not the piece from the copy & paste section
+        'layout': {
+        'visibility': 'visible',
+        'line-cap': 'round',
+        'line-join':'round',
+        },
+        'paint': {
+            'line-width': 4,
+            'line-color': [
+              "match",
+              ["get", "phase"],
+              [1],
+              "#167575",
+              [2],
+              "#5f41ab",
+              [3],
+              "#b0459a",
+              [4],
+              "#f79a60",
+              [5],
+              "hsla(0, 0%, 0%, 0)",
+              "#000000"
+            ]
+        },
+    })
+    });
+ 
+    
+// if new layers are added, changed, renamed, etc. change them here to update the toggle piece 
+ var toggleableLayerIds = [ 'trails','roads','open space', 'bnrc properties' ];
+    
+ // following is the layer toggle script
+for (var i = 0; i < toggleableLayerIds.length; i++) {
+    var id = toggleableLayerIds[i];
+    var link = document.createElement('a');
+    link.href = '#';
+    link.className = 'active';
+    link.textContent = id;
+    link.onclick = function (e) {
+        var clickedLayer = this.textContent;
+        e.preventDefault();
+        e.stopPropagation();
+        var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+        if (visibility === 'visible') {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+            this.className = '';
+        } else {
+            this.className = 'active';
+            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+        }
+    };
+    var layers = document.getElementById('menu');
+    layers.appendChild(link);
+    }
+    
+// trails popup showing name and other routes
+map.on('click', 'trails', function (e) {
+    new mapboxgl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML('<h3>Name: </h3>' + '<p>' +
+         e.features[0].properties.NAME +'</p>')
+        .addTo(map);
+    });
+ 
+// Change the cursor to a pointer when the mouse is over the places layer.
+    map.on('mouseenter', 'trails', function () {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+ 
+// Change it back to a pointer when it leaves.
+    map.on('mouseleave', 'trails', function () {
+        map.getCanvas().style.cursor = '';
+    });
+    
+   // roads popup showing name? Not sure if there's a way to merge this and previous popup function 
+map.on('click', 'roads', function (e) {
+    new mapboxgl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML('<h3>Name: </h3>' + '<p>' +
+         e.features[0].properties.Title_Name +'</p>')
+        .addTo(map);
+    });
+ 
+// Change the cursor to a pointer when the mouse is over the places layer.
+    map.on('mouseenter', 'roads', function () {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+ 
+// Change it back to a pointer when it leaves.
+    map.on('mouseleave', 'roads', function () {
+        map.getCanvas().style.cursor = '';
+    });
+    
+/*// Load layers after style changes 
+map.on('style.load', function() {
+    // Always add the same custom soruces and layers after a style change
+        
+    for (var i = 0; i < customLayers.length; i++) {
+        var me = customLayers[i]
+        map.addSource(me.layer.source, me.source);
+        map.addLayer(me.layer, 'waterway-label')
+    }
+});*/
+    
+// Basemap toggle doesnt quite work yet. Basemap will switch but layers dont reload
+/* 
+var layerList = document.getElementById('base');
+var inputs = layerList.getElementsByTagName('input');
+ 
+function switchLayer(layer) {
+    var layerId = layer.target.id;
+    map.setStyle('mapbox://styles/' + layerId);
+}
+ 
+for (var i = 0; i < inputs.length; i++) {
+    inputs[i].onclick = switchLayer,
+}
+ */   
+//next step is to create a header with the ability to see what OS you're hovering over: maybe add ownership?
+map.on('mousemove', function(e) {
+  var osr = map.queryRenderedFeatures(e.point, {
+    layers: ['open space']
+  });
+
+  if (osr.length > 0) {
+    document.getElementById('pd').innerHTML = '<h3><strong>' + osr[0].properties.SITE_NAME + '</strong></h3><p><strong><em>' + osr[0].properties.GIS_ACRES + '</strong> acres conserved</em></p>';
+  } else {
+    document.getElementById('pd').innerHTML = '<p><em>Hover over open space!</em></p>';
+  }
+});
+</script>
+</body>
+</html>
